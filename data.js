@@ -1,62 +1,347 @@
-const liveInterviewTimeline = [{
-        aiQuestion: "Excellent. Now, how do you handle state management in a large-scale application to prevent unnecessary re-renders?",
-        mockUserResponse: "I primarily use Redux Toolkit or the Context API with useMemo. I structure slices cleanly and ensure components only select the exact piece of state they need.",
-        metricsAfter: { confidence: 85, clarity: 90, structure: 80, enthusiasm: 88, status: "Excellent", perception: "Demonstrates strong architectural awareness. Communication is sharp, structured, and technically accurate." }
-    },
-    {
-        aiQuestion: "Great. Tell me about a time you had a major conflict with a team member. How did you resolve it?",
-        mockUserResponse: "We disagreed on using SQL vs NoSQL. Instead of arguing, I pulled benchmarking data for our specific use case, scheduled a 10-minute sync, and we objectively chose the best fit together.",
-        metricsAfter: { confidence: 92, clarity: 88, structure: 95, enthusiasm: 90, status: "Outstanding", perception: "High emotional intelligence (EQ) detected. Exceptional behavioral framework alignment using the STAR method." }
-    }
-];
+/**
+ * EchoHire - Native Fetch REST Integration Engine
+ * No SDK dependencies required. Bypasses CDN library loading issues.
+ */
 
-// Track the active live question step
-let liveStep = 0;
-// The data displaying on the right-hand panel
-const interviewState = {
-    candidate: {
-        name: "Candidate Name"
+const GEMINI_API_KEY = "AIzaSyBt91jEBqEjbB2H6qITY0L44uN6PTDssRI";
+
+// 2. LIVE SIMULATION CORE APPLICATION STATE
+let interviewActive = false;
+let currentQuestionIndex = 1;
+const totalQuestions = 5;
+let confidenceChartInstance = null;
+
+const appState = {
+    candidateName: "Aarav Kumar",
+    targetedRole: "Not Selected",
+    overallConfidence: 0,
+    statusText: "Idle",
+    perceptionText: "Awaiting your target role submission to initialize telemetry systems...",
+    proTip: "Type any career track below (e.g., Frontend Developer, Data Scientist) to unlock the live workspace panel.",
+    insights: {
+        confidence: { score: "—" },
+        clarity: { score: "—" },
+        structure: { score: "—" },
+        enthusiasm: { score: "—" }
     },
-    liveAnalysis: {
-        overallConfidence: 78,
-        statusText: "Good",
-        interviewerPerception: "You sound technically strong and enthusiastic. Keep structuring your answers a bit more for clarity.",
-        keyInsights: {
-            confidence: { status: "Good", trend: "up" },
-            clarity: { status: "Average", trend: "neutral" },
-            structure: { status: "Average", trend: "neutral" },
-            enthusiasm: { status: "Good", trend: "up" }
-        },
-        proTip: "Take a moment, think, and answer with structure. You've got this!"
-    },
-    transcript: []
+    chatHistory: [] // Stores conversation history for ongoing context
 };
-let confidenceChart;
+
+// 3. APPLICATION RUNTIME CONTAINER LIFECYCLE
+document.addEventListener('DOMContentLoaded', () => {
+    injectChatBubbleStyles();
+    initUIElements();
+    renderGaugeChart(appState.overallConfidence);
+    attachEventListeners();
+});
+
+function getChatContainer() {
+    return document.getElementById('chat-bubble-container') || 
+           document.querySelector('.flex-1.overflow-y-auto') ||
+           document.getElementById('main-chat-view'); 
+}
+
+// 4. BIND INTERACTION ATTRIBUTES TO BOTH BUTTONS AND KEY INPUTS
+function attachEventListeners() {
+    const startSendBtn = document.getElementById('send-message-btn') || document.querySelector('.bg-indigo-600.text-white') || document.querySelector('button');
+    const inputField = document.getElementById('chat-input-field') || document.querySelector('input');
+
+    if (startSendBtn) {
+        startSendBtn.onclick = (e) => {
+            e.preventDefault();
+            handleActionCycle();
+        };
+    }
+
+    if (inputField) {
+        inputField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleActionCycle();
+            }
+        });
+    }
+}
+
+// 5. INTERVIEW PIPELINE STATE MACHINE CONTROL MATRIX
+async function handleActionCycle() {
+    const inputField = document.getElementById('chat-input-field') || document.querySelector('input');
+    if (!inputField) return;
+
+    const rawInput = inputField.value.trim();
+    if (!rawInput) return;
+
+    inputField.value = '';
+
+    // PHASE ONE: Setup track and call initial system welcome parameters
+    if (!interviewActive) {
+        appState.targetedRole = rawInput;
+        interviewActive = true;
+        
+        const roleHeader = document.querySelector('.text-sm.font-medium.text-indigo-600') || document.querySelector('[role="status"]');
+        if (roleHeader) roleHeader.textContent = appState.targetedRole;
+
+        clearMainWorkspaceForChat();
+        showTypingIndicator(true);
+        
+        const systemPrompt = `You are a strict, highly encouraging executive AI Mock Interviewer. The candidate is targeting a '${appState.targetedRole}' position. Greet them by name (${appState.candidateName}) and ask Question 1: An engaging, open-ended introductory technical concept question designed for this exact specialty. Return raw plain text lines only, do not wrap your output message inside markdown blocks.`;
+        
+        const initialAIQuestion = await fetchGeminiNative(systemPrompt);
+        showTypingIndicator(false);
+        
+        appendChatBubble("ai", initialAIQuestion);
+        
+        appState.overallConfidence = 65;
+        appState.statusText = "GOOD";
+        appState.perceptionText = `Track initialized for ${appState.targetedRole.toUpperCase()}. Workspace mapping operational arrays.`;
+        appState.proTip = "Structure your answer by explaining your choices and detailing structural project trade-offs.";
+        
+        syncDashboardUI();
+        return;
+    }
+
+    // PHASE TWO: Process dynamic answer tracking loops
+    appendChatBubble("user", rawInput);
+    showTypingIndicator(true);
+
+    const evaluationContextPrompt = `The candidate is responding to your last interview question for the role of ${appState.targetedRole}. 
+    Candidate response string data: "${rawInput}"
+    
+    Execute exactly these two structural requirements in your output payload:
+    1. Reply with a highly professional feedback paragraph grading their answer content, then immediately frame your NEXT technical follow-up interview question. Keep it brief.
+    2. At the absolute end of your response text, attach this exact JSON block token mapping structure wrapped inside <metrics></metrics> tags containing scoring metrics ranging from 40 to 100 based on their answer quality parameters:
+    <metrics>{"confidence": 80, "clarity": 75, "structure": 85, "enthusiasm": 90, "overall": 82, "status": "GOOD", "perception": "Maintained strong clarity values in technical reasoning pathways."}</metrics>`;
+
+    const rawAIResult = await fetchGeminiNative(evaluationContextPrompt);
+    showTypingIndicator(false);
+
+    const metricsRegex = /<metrics>([\s\S]*?)<\/metrics>/;
+    const match = rawAIResult.match(metricsRegex);
+    let visibleText = rawAIResult.replace(metricsRegex, '').trim();
+
+    if (match && match[1]) {
+        try {
+            const metricsData = JSON.parse(match[1].trim());
+            
+            appState.overallConfidence = metricsData.overall || 75;
+            appState.statusText = (metricsData.status || "GOOD").toUpperCase();
+            appState.perceptionText = metricsData.perception || "Maintained stable domain authority parameters.";
+            
+            appState.insights.confidence.score = `${metricsData.confidence}%`;
+            appState.insights.clarity.score = `${metricsData.clarity}%`;
+            appState.insights.structure.score = `${metricsData.structure}%`;
+            appState.insights.enthusiasm.score = `${metricsData.enthusiasm}%`;
+        } catch (e) {
+            calculateHeuristicFallbackMetrics(rawInput);
+        }
+    } else {
+        calculateHeuristicFallbackMetrics(rawInput);
+    }
+
+    appendChatBubble("ai", visibleText);
+    
+    if (currentQuestionIndex < totalQuestions) {
+        currentQuestionIndex++;
+        updateProgressIndicator();
+    } else {
+        appState.proTip = "Interview tracks finished! Session summary generated successfully.";
+    }
+
+    syncDashboardUI();
+}
+
+// 6. NATIVE HTTP FETCH REQUEST PIPELINE (No SDK needed)
+async function fetchGeminiNative(promptText) {
+    // Add raw prompt into chat state history mapping logs
+    appState.chatHistory.push({
+        role: "user",
+        parts: [{ text: promptText }]
+    });
+
+    const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    try {
+        const response = await fetch(endpointUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                contents: appState.chatHistory
+            })
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || "Server response breakdown configuration.");
+        }
+
+        const data = await response.json();
+        const outputText = data.candidates[0].content.parts[0].text;
+
+        // Keep system tracking logs synchronized
+        appState.chatHistory.push({
+            role: "model",
+            parts: [{ text: outputText }]
+        });
+
+        return outputText;
+
+    } catch (err) {
+        console.error("Downstream API Error: ", err);
+        return `Connection Error: ${err.message || "Failed to transfer request package to Google Endpoint models."}`;
+    }
+}
+
+// --- RENDERING ROUTINES AND INTERACTIVE PANEL UI MANIPULATORS ---
+
+function clearMainWorkspaceForChat() {
+    const centerDisplay = getChatContainer();
+    if (centerDisplay) {
+        centerDisplay.innerHTML = '';
+    }
+}
+
+function initUIElements() {
+    const inputField = document.getElementById('chat-input-field') || document.querySelector('input');
+    if (inputField) {
+        inputField.placeholder = "Specify target role or paste job description to begin...";
+    }
+    syncDashboardUI();
+}
+
+function syncDashboardUI() {
+    const scoreNum = document.getElementById('score-number');
+    const scoreStat = document.getElementById('score-status') || document.querySelector('.text-blue-600') || document.querySelector('.text-emerald-500');
+    const perception = document.getElementById('perception-box-text');
+    const tipText = document.getElementById('pro-tip-text');
+    const inputField = document.getElementById('chat-input-field') || document.querySelector('input');
+
+    if (scoreNum) scoreNum.textContent = appState.overallConfidence > 0 ? `${appState.overallConfidence}/100` : '-- /100';
+    if (scoreStat) scoreStat.textContent = appState.statusText;
+    if (perception) perception.textContent = appState.perceptionText;
+    if (tipText) tipText.textContent = appState.proTip;
+
+    if (inputField && interviewActive) {
+        inputField.placeholder = "Type your contextual answer here...";
+    }
+
+    updateInsightRow('Confidence', appState.insights.confidence.score);
+    updateInsightRow('Clarity', appState.insights.clarity.score);
+    updateInsightRow('Structure', appState.insights.structure.score);
+    updateInsightRow('Enthusiasm', appState.insights.enthusiasm.score);
+
+    renderGaugeChart(appState.overallConfidence);
+}
+
+function updateInsightRow(labelName, calculatedValue) {
+    const containerRows = document.querySelectorAll('.flex.items-center.justify-between.p-2') || document.querySelectorAll('.flex.items-center.justify-between');
+    containerRows.forEach(row => {
+        if (row.firstElementChild && row.firstElementChild.textContent.includes(labelName)) {
+            let scoreSpan = row.querySelector('.text-sm.font-semibold') || row.lastElementChild;
+            if (scoreSpan) {
+                scoreSpan.className = "text-sm font-semibold text-emerald-500";
+                scoreSpan.textContent = calculatedValue;
+            }
+        }
+    });
+}
+
+function updateProgressIndicator() {
+    const progressLabel = document.querySelector('.text-xs.font-semibold.text-slate-500');
+    if (progressLabel) {
+        progressLabel.textContent = `QUESTION ${currentQuestionIndex} OF ${totalQuestions}`;
+    }
+    const fillBar = document.querySelector('.h-full.bg-indigo-600.rounded-full') || document.querySelector('.w-full.bg-indigo-600');
+    if (fillBar) {
+        fillBar.style.width = `${(currentQuestionIndex / totalQuestions) * 100}%`;
+    }
+}
+
+function appendChatBubble(sender, contentText) {
+    const container = getChatContainer();
+    if (!container) return;
+
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const wrapper = document.createElement('div');
+    
+    if (sender === "user") {
+        wrapper.className = "bubble-row user-bubble-alignment animate-fade-in";
+        wrapper.innerHTML = `
+            <div class="bubble-inner user-bubble-styling">
+                <div class="bubble-metadata" style="color: #cbd5e1;">${timestamp} • You</div>
+                <div>${contentText}</div>
+            </div>
+        `;
+    } else {
+        wrapper.className = "bubble-row ai-bubble-alignment animate-fade-in";
+        wrapper.innerHTML = `
+            <div class="bubble-avatar">🤖</div>
+            <div class="bubble-inner ai-bubble-styling">
+                <div class="bubble-metadata" style="color: #64748b;">AI Interviewer • ${timestamp}</div>
+                <div>${contentText}</div>
+            </div>
+        `;
+    }
+
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
+}
+
+function showTypingIndicator(visible) {
+    const container = getChatContainer();
+    if (!container) return;
+
+    const existing = document.getElementById('echo-typing-node');
+    if (existing) existing.remove();
+
+    if (visible) {
+        const pulseRow = document.createElement('div');
+        pulseRow.id = "echo-typing-node";
+        pulseRow.className = "bubble-row ai-bubble-alignment animate-pulse";
+        pulseRow.innerHTML = `
+            <div class="bubble-avatar">🤖</div>
+            <div class="bubble-inner ai-bubble-styling" style="font-style: italic; color: #64748b; font-size: 13px;">
+                Gemini is processing parameters and evaluating analytics responses...
+            </div>
+        `;
+        container.appendChild(pulseRow);
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function calculateHeuristicFallbackMetrics(textStr) {
+    const baseVal = Math.min(95, Math.max(50, 65 + Math.floor(textStr.length / 8)));
+    appState.overallConfidence = baseVal;
+    appState.statusText = baseVal > 75 ? "STRONG" : "AVERAGE";
+}
 
 function renderGaugeChart(scoreValue) {
-    const ctx = document.getElementById('confidenceGauge').getContext('2d');
-
-    // Balance the rest of the chart to complete the 100 points scale
+    const canvas = document.getElementById('confidenceGauge');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
     const remainingValue = 100 - scoreValue;
 
-    if (confidenceChart) confidenceChart.destroy(); // Prevent memory leaks on update
+    if (confidenceChartInstance) {
+        confidenceChartInstance.destroy();
+    }
 
-    confidenceChart = new Chart(ctx, {
+    confidenceChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
             datasets: [{
                 data: [scoreValue, remainingValue],
-                backgroundColor: ['#4f46e5', '#e2e8f0'], // Indigo color vs slate background
+                backgroundColor: ['#4f46e5', '#e2e8f0'],
                 borderWidth: 0,
-                borderRadius: [10, 0]
+                borderRadius: [8, 0]
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            circumference: 180, // Forces semi-circle structure
-            rotation: -90, // Rotates chart to start from left side
-            cutout: '85%', // Controls thickness of the ring
+            circumference: 180,
+            rotation: -90,
+            cutout: '82%',
             plugins: {
                 legend: { display: false },
                 tooltip: { enabled: false }
@@ -65,299 +350,21 @@ function renderGaugeChart(scoreValue) {
     });
 }
 
-function updateUIElements() {
-    // 1. Update Candidate Info Header & Sidebar
-    document.getElementById('candidate-display-name').innerText = interviewState.candidate.name;
-
-    // 2. Render Live Analysis Side-text
-    document.getElementById('score-number').innerText = interviewState.liveAnalysis.overallConfidence;
-    document.getElementById('score-status').innerText = interviewState.liveAnalysis.statusText;
-    document.getElementById('perception-box-text').innerText = interviewState.liveAnalysis.interviewerPerception;
-    document.getElementById('pro-tip-text').innerText = interviewState.liveAnalysis.proTip;
-
-    // 3. Render the Key Insights Trends
-    updateInsightRow('insight-confidence', interviewState.liveAnalysis.keyInsights.confidence);
-    updateInsightRow('insight-clarity', interviewState.liveAnalysis.keyInsights.clarity);
-    updateInsightRow('insight-structure', interviewState.liveAnalysis.keyInsights.structure);
-    updateInsightRow('insight-enthusiasm', interviewState.liveAnalysis.keyInsights.enthusiasm);
-
-    // 4. Render the Chat Bubbles dynamically
-    const chatContainer = document.getElementById('chat-bubble-container');
-    chatContainer.innerHTML = ''; // Reset container frame
-
-    interviewState.transcript.forEach(msg => {
-        const bubble = document.createElement('div');
-
-        if (msg.sender === 'ai') {
-            bubble.className = "flex gap-3 mb-4 items-start";
-            bubble.innerHTML = `
-        <div class="bg-indigo-100 p-2 rounded-full text-indigo-600 font-bold text-sm">🤖</div>
-        <div>
-          <div class="text-xs text-slate-400 font-medium mb-1">AI Interviewer • ${msg.time}</div>
-          <div class="bg-indigo-50 text-slate-800 p-4 rounded-2xl rounded-tl-none max-w-xl text-sm border border-indigo-100 leading-relaxed">${msg.text}</div>
-        </div>`;
-        } else {
-            bubble.className = "flex gap-3 mb-4 items-start justify-end text-right";
-            bubble.innerHTML = `
-        <div>
-          <div class="text-xs text-slate-400 font-medium mb-1">${msg.time} • You</div>
-          <div class="bg-indigo-600 text-white p-4 rounded-2xl rounded-tr-none max-w-xl text-sm text-left leading-relaxed">${msg.text}</div>
-        </div>`;
-        }
-        chatContainer.appendChild(bubble);
-    });
+function injectChatBubbleStyles() {
+    if (document.getElementById('echo-injected-css')) return;
+    const stylesheet = document.createElement('style');
+    stylesheet.id = "echo-injected-css";
+    stylesheet.innerHTML = `
+        .bubble-row { display: flex; gap: 12px; margin-bottom: 16px; width: 100%; font-family: sans-serif; box-sizing: border-box; }
+        .user-bubble-alignment { justify-content: flex-end; }
+        .ai-bubble-alignment { justify-content: flex-start; }
+        .bubble-avatar { background: #e0e7ff; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; font-size: 16px; flex-shrink: 0; border: 1px solid #c7d2fe; }
+        .bubble-inner { max-w-xl; padding: 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; }
+        .user-bubble-styling { background: #4f46e5; color: #ffffff; border-top-right-radius: 0px; }
+        .ai-bubble-styling { background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0; border-top-left-radius: 0px; }
+        .bubble-metadata { font-size: 11px; font-weight: 500; margin-bottom: 4px; }
+        @keyframes echoFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: echoFade 0.25s ease-out forwards; }
+    `;
+    document.head.appendChild(stylesheet);
 }
-
-function updateInsightRow(elementId, dataset) {
-    const target = document.getElementById(elementId);
-    const colorClass = dataset.status === "Good" ? "text-emerald-600" : "text-amber-500";
-    const arrowSymbol = dataset.trend === "up" ? "↑" : "→";
-
-    target.innerHTML = `<span class="${colorClass} font-semibold flex items-center gap-1">${arrowSymbol} ${dataset.status}</span>`;
-}
-
-function setupInteractionHandlers() {
-    const sendBtn = document.getElementById('send-message-btn');
-    const textInput = document.getElementById('chat-input-field');
-
-    sendBtn.addEventListener('click', () => {
-        const userText = textInput.value.trim();
-        if (!userText) return;
-
-        const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        // 1. Push user's answer
-        interviewState.transcript.push({
-            sender: "user",
-            time: currentTime,
-            text: userText
-        });
-
-        textInput.value = '';
-        updateUIElements();
-
-        // 2. INNOVATION: Simulate Live AI Analysis & Dynamic Score Shifting
-        // We mock a variance in scores based on the answer length to simulate analysis
-        setTimeout(() => {
-            // Calculate dynamic score shifts
-            const delta = userText.length > 40 ? 4 : -3;
-            interviewState.liveAnalysis.overallConfidence = Math.min(100, Math.max(50, interviewState.liveAnalysis.overallConfidence + delta));
-
-            // Update perception text based on content
-            if (userText.length > 40) {
-                interviewState.liveAnalysis.interviewerPerception = "Excellent depth in your last response. Technical maturity score increased.";
-                interviewState.liveAnalysis.keyInsights.clarity.status = "Good";
-            } else {
-                interviewState.liveAnalysis.interviewerPerception = "Your last answer was slightly brief. Try expanding on your specific engineering trade-offs.";
-                interviewState.liveAnalysis.keyInsights.clarity.status = "Needs Work";
-            }
-
-            // 3. Update the AI's follow-up question dynamically
-            interviewState.transcript.push({
-                sender: "ai",
-                time: currentTime,
-                text: "Got it. Based on that, how do you scale this architecture if simultaneous active user requests increase by 10x?"
-            });
-
-            // 4. Re-render everything instantly with smooth visual updates
-            updateUIElements();
-            renderGaugeChart(interviewState.liveAnalysis.overallConfidence);
-
-            const container = document.getElementById('chat-bubble-container');
-            container.scrollTop = container.scrollHeight;
-        }, 1500); // 1.5 second "thinking" delay
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    updateUIElements();
-    renderGaugeChart(interviewState.liveAnalysis.overallConfidence);
-    setupInteractionHandlers();
-});
-
-function triggerLiveAIStep() {
-    if (liveStep >= liveInterviewTimeline.length) {
-        // Interview completed loop
-        alert("🎉 Live Mock Interview Session Completed! Final reports compiled successfully.");
-        return;
-    }
-
-    const currentData = liveInterviewTimeline[liveStep];
-    const chatContainer = document.getElementById('chat-bubble-container');
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    // 1. Show AI "Thinking/Typing" State
-    const typingIndicator = document.createElement('div');
-    typingIndicator.id = "ai-typing-indicator";
-    typingIndicator.className = "flex gap-3 mb-4 items-start animate-pulse";
-    typingIndicator.innerHTML = `
-    <div class="bg-indigo-100 p-2 rounded-full text-indigo-600 font-bold text-sm">🤖</div>
-    <div class="bg-slate-100 text-slate-500 p-3 rounded-2xl rounded-tl-none text-xs italic">AI Interviewer is analyzing and typing...</div>
-  `;
-    chatContainer.appendChild(typingIndicator);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    // 2. AI speaks after a 2-second realistic delay
-    setTimeout(() => {
-        // Remove typing indicator
-        const indicator = document.getElementById('ai-typing-indicator');
-        if (indicator) indicator.remove();
-
-        // Append actual AI Question
-        const aiBubble = document.createElement('div');
-        aiBubble.className = "flex gap-3 mb-4 items-start";
-        aiBubble.innerHTML = `
-      <div class="bg-indigo-100 p-2 rounded-full text-indigo-600 font-bold text-sm">🤖</div>
-      <div>
-        <div class="text-xs text-slate-400 font-medium mb-1">AI Interviewer • ${currentTime}</div>
-        <div class="bg-indigo-50 text-slate-800 p-4 rounded-2xl rounded-tl-none max-w-xl text-sm border border-indigo-100 leading-relaxed">${currentData.aiQuestion}</div>
-      </div>`;
-        chatContainer.appendChild(aiBubble);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-
-        // Increment question tracker dots in the bottom right corner layout
-        updateQuestionProgressDots(liveStep + 3); // Since image shows step 2 out of 5 initially
-
-        // 3. Simulate Candidate responding after another short pause
-        setTimeout(() => {
-            const userBubble = document.createElement('div');
-            userBubble.className = "flex gap-3 mb-4 items-start justify-end text-right";
-            userBubble.innerHTML = `
-        <div>
-          <div class="text-xs text-slate-400 font-medium mb-1">${currentTime} • You</div>
-          <div class="bg-indigo-600 text-white p-4 rounded-2xl rounded-tr-none max-w-xl text-sm text-left leading-relaxed">${currentData.mockUserResponse}</div>
-        </div>`;
-            chatContainer.appendChild(userBubble);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            // 4. Update Metrics based on this exchange
-            updateLiveAnalysisDashboard(currentData.metricsAfter);
-
-            // Move to next step array pointer
-            liveStep++;
-
-        }, 4000); // Time candidate takes to formulate response
-
-    }, 2000);
-}
-
-// Helper to push new stats up to layout metrics view instantly
-function updateLiveAnalysisDashboard(metrics) {
-    // Update numbers and badges
-    document.getElementById('score-number').innerText = metrics.confidence;
-    document.getElementById('score-status').innerText = metrics.status;
-    document.getElementById('perception-box-text').innerText = metrics.perception;
-
-    // Redraw the chart circle with the updated confidence score instantly
-    renderGaugeChart(metrics.confidence);
-
-    // Update specific lists/trends if needed
-    document.getElementById('insight-confidence').innerHTML = `<span class="text-emerald-600 font-semibold flex items-center gap-1">↑ Good</span>`;
-    document.getElementById('insight-clarity').innerHTML = `<span class="text-emerald-600 font-semibold flex items-center gap-1">↑ Good</span>`;
-}
-
-// Helper to highlight the numeric tracking steps (1, 2, 3, 4, 5) at the bottom right
-function updateQuestionProgressDots(stepNumber) {
-    const dots = document.querySelectorAll('[id^="step-dot-"]');
-    dots.forEach((dot, idx) => {
-        if (idx + 1 === stepNumber) {
-            dot.className = "w-8 h-8 flex items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-xs";
-        } else if (idx + 1 < stepNumber) {
-            dot.className = "w-8 h-8 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-bold text-xs";
-        }
-    });
-}
-
-function triggerLiveAIStep() {
-    if (liveStep >= liveInterviewTimeline.length) {
-        // Interview completed loop
-        alert("🎉 Live Mock Interview Session Completed! Final reports compiled successfully.");
-        return;
-    }
-
-    const currentData = liveInterviewTimeline[liveStep];
-    const chatContainer = document.getElementById('chat-bubble-container');
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    // 1. Show AI "Thinking/Typing" State
-    const typingIndicator = document.createElement('div');
-    typingIndicator.id = "ai-typing-indicator";
-    typingIndicator.className = "flex gap-3 mb-4 items-start animate-pulse";
-    typingIndicator.innerHTML = `
-    <div class="bg-indigo-100 p-2 rounded-full text-indigo-600 font-bold text-sm">🤖</div>
-    <div class="bg-slate-100 text-slate-500 p-3 rounded-2xl rounded-tl-none text-xs italic">AI Interviewer is analyzing and typing...</div>
-  `;
-    chatContainer.appendChild(typingIndicator);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    // 2. AI speaks after a 2-second realistic delay
-    setTimeout(() => {
-        // Remove typing indicator
-        const indicator = document.getElementById('ai-typing-indicator');
-        if (indicator) indicator.remove();
-
-        // Append actual AI Question
-        const aiBubble = document.createElement('div');
-        aiBubble.className = "flex gap-3 mb-4 items-start";
-        aiBubble.innerHTML = `
-      <div class="bg-indigo-100 p-2 rounded-full text-indigo-600 font-bold text-sm">🤖</div>
-      <div>
-        <div class="text-xs text-slate-400 font-medium mb-1">AI Interviewer • ${currentTime}</div>
-        <div class="bg-indigo-50 text-slate-800 p-4 rounded-2xl rounded-tl-none max-w-xl text-sm border border-indigo-100 leading-relaxed">${currentData.aiQuestion}</div>
-      </div>`;
-        chatContainer.appendChild(aiBubble);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-
-        // Increment question tracker dots in the bottom right corner layout
-        updateQuestionProgressDots(liveStep + 3); // Since image shows step 2 out of 5 initially
-
-        // 3. Simulate Candidate responding after another short pause
-        setTimeout(() => {
-            const userBubble = document.createElement('div');
-            userBubble.className = "flex gap-3 mb-4 items-start justify-end text-right";
-            userBubble.innerHTML = `
-        <div>
-          <div class="text-xs text-slate-400 font-medium mb-1">${currentTime} • You</div>
-          <div class="bg-indigo-600 text-white p-4 rounded-2xl rounded-tr-none max-w-xl text-sm text-left leading-relaxed">${currentData.mockUserResponse}</div>
-        </div>`;
-            chatContainer.appendChild(userBubble);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            // 4. Update Metrics based on this exchange
-            updateLiveAnalysisDashboard(currentData.metricsAfter);
-
-            // Move to next step array pointer
-            liveStep++;
-
-        }, 4000); // Time candidate takes to formulate response
-
-    }, 2000);
-}
-
-// Helper to push new stats up to layout metrics view instantly
-function updateLiveAnalysisDashboard(metrics) {
-    // Update numbers and badges
-    document.getElementById('score-number').innerText = metrics.confidence;
-    document.getElementById('score-status').innerText = metrics.status;
-    document.getElementById('perception-box-text').innerText = metrics.perception;
-
-    // Redraw the chart circle with the updated confidence score instantly
-    renderGaugeChart(metrics.confidence);
-
-    // Update specific lists/trends if needed
-    document.getElementById('insight-confidence').innerHTML = `<span class="text-emerald-600 font-semibold flex items-center gap-1">↑ Good</span>`;
-    document.getElementById('insight-clarity').innerHTML = `<span class="text-emerald-600 font-semibold flex items-center gap-1">↑ Good</span>`;
-}
-
-// Helper to highlight the numeric tracking steps (1, 2, 3, 4, 5) at the bottom right
-function updateQuestionProgressDots(stepNumber) {
-    const dots = document.querySelectorAll('[id^="step-dot-"]');
-    dots.forEach((dot, idx) => {
-        if (idx + 1 === stepNumber) {
-            dot.className = "w-8 h-8 flex items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-xs";
-        } else if (idx + 1 < stepNumber) {
-            dot.className = "w-8 h-8 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-bold text-xs";
-        }
-    });
-}
-k
