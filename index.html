@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EchoHire - AI Interview Coach</title>
+  <link rel="stylesheet" href="style.css">
+  <script href="data.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="material-icons-outlined brand-icon">forum</span>
+        <div>
+          <h2>EchoHire</h2>
+          <p>AI Interview Coach</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active"><span class="material-icons-outlined">chat_bubble_outline</span> Interview</a>
+        <a href="#" class="nav-item"><span class="material-icons-outlined">leaderboard</span> Analysis</a>
+        <a href="#" class="nav-item"><span class="material-icons-outlined">history</span> History</a>
+        <a href="#" class="nav-item"><span class="material-icons-outlined">tips_and_updates</span> Tips</a>
+      </nav>
+
+      <div class="user-profile login-trigger" style="cursor: pointer;">
+        <div class="avatar" style="background-color: #16161a; border-color: #27272a;">
+          <span class="material-icons-outlined" style="font-size: 16px; color: var(--text-muted);">login</span>
+        </div>
+        <div class="user-info">
+          <span id="candidate-name" class="user-name" style="color: var(--text-muted);">Guest Account</span>
+          <span id="candidate-role" class="user-role">Click to Sign In</span>
+        </div>
+        <span class="material-icons-outlined toggle-icon">chevron_right</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <div class="header-title">
+          <h1>Mock Interview <span class="badge-live" style="color: var(--text-muted); background: transparent; border-color: var(--border-color);">&mdash;</span></h1>
+          <p>Role: <span class="text-highlight">Not Selected</span></p>
+        </div>
+        <button class="btn-end" style="color: var(--text-muted); border-color: var(--border-color); cursor: not-allowed;" disabled>
+          <span class="material-icons-outlined">lock</span> Secure Session
+        </button>
+      </header>
+
+      <div class="chat-area" style="justify-content: center; align-items: center;">
+        <div class="empty-state-wrapper" style="text-align: center; max-width: 320px;">
+          <span class="material-icons-outlined" style="font-size: 40px; color: var(--border-color); margin-bottom: 16px; display: block;">fingerprint</span>
+          <h3 style="font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 6px;">Initialize Session Architecture</h3>
+          <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">Type your targeted role below or connect your profile to begin the diagnostic evaluation lifecycle.</p>
+        </div>
+      </div>
+
+      <footer class="input-footer">
+        <div class="progress-container">
+          <span class="progress-text">Question 1 of 5</span>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <div class="input-box-wrapper">
+          <input type="text" placeholder="Specify role or paste job description to begin..." class="reply-input">
+          <div class="input-actions">
+            <button class="btn-mic"><span class="material-icons-outlined">mic_none</span> System Calibrated</button>
+            <button class="btn-send"><span class="material-icons-outlined">play_arrow</span> Start</button>
+          </div>
+        </div>
+
+        <div class="pro-tip">
+          <span class="material-icons-outlined tip-icon">tips_and_updates</span>
+          <p><strong>Pro Tip:</strong> Sign in using the panel link on the left to sync past technical evaluation metrics.</p>
+        </div>
+      </footer>
+    </main>
+
+    <aside class="analytics-sidebar">
+      <h3>Live Analysis</h3>
+
+      <div class="card gauge-card">
+        <h4>Overall Confidence</h4>
+        <div class="gauge-wrapper">
+          <div class="semi-circle-gauge" style="background: var(--border-color);">
+            <div class="gauge-center">
+              <span class="score" style="color: var(--text-muted);">&mdash;</span>
+              <span class="total">/100</span>
+            </div>
+          </div>
+        </div>
+        <span class="gauge-status" style="color: var(--text-muted);">Idle</span>
+      </div>
+
+      <div class="card perception-card">
+        <h4>Interviewer Perception</h4>
+        <div class="perception-content">
+          <span class="material-icons-outlined perception-icon" style="color: var(--text-muted);">sensors_off</span>
+          <p id="perception-text" class="text-slate-300" style="color: var(--text-muted);">Awaiting audio/text streaming input fields...</p>
+        </div>
+      </div>
+
+      <div class="card insights-card">
+        <div class="tabs-nav">
+          <button class="tab-btn border-indigo-500 text-indigo-400" data-target="panel-weaknesses">Key Insights</button>
+          <button class="tab-btn" data-target="panel-tips">Tips</button>
+          <button class="tab-btn" data-target="panel-suggestions">Suggestions</button>
+        </div>
+
+        <div class="tabs-content">
+          <div id="panel-weaknesses" class="tab-panel">
+            <ul id="weaknesses-list" class="insight-list">
+              <li>
+                <div class="insight-label"><span class="material-icons-outlined" style="color: var(--text-muted);">stars</span> Confidence</div>
+                <div class="insight-status" style="color: var(--text-muted); font-weight: 500;">&mdash;</div>
+              </li>
+              <li>
+                <div class="insight-label"><span class="material-icons-outlined" style="color: var(--text-muted);">chat</span> Clarity</div>
+                <div class="insight-status" style="color: var(--text-muted); font-weight: 500;">&mdash;</div>
+              </li>
+              <li>
+                <div class="insight-label"><span class="material-icons-outlined" style="color: var(--text-muted);">segment</span> Structure</div>
+                <div class="insight-status" style="color: var(--text-muted); font-weight: 500;">&mdash;</div>
+              </li>
+              <li>
+                <div class="insight-label"><span class="material-icons-outlined" style="color: var(--text-muted);">local_fire_department</span> Enthusiasm</div>
+                <div class="insight-status" style="color: var(--text-muted); font-weight: 500;">&mdash;</div>
+              </li>
+            </ul>
+          </div>
+
+          <div id="panel-tips" class="tab-panel hidden">
+            <ul id="tips-list" class="list-container"></ul>
+          </div>
+
+          <div id="panel-suggestions" class="tab-panel hidden">
+            <ul id="suggestions-list" class="list-container"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="h-64 w-full" style="display: none !important;">
+        <canvas id="metricsChart"></canvas>
+      </div>
+
+      <div class="card progress-steps-card">
+        <h4>Question Progress</h4>
+        <div class="steps-wrapper">
+          <div class="step active">1</div>
+          <div class="step">2</div>
+          <div class="step">3</div>
+          <div class="step">4</div>
+          <div class="step">5</div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+</body>
+</html>
