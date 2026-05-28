@@ -4,165 +4,177 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EchoHire - AI Interview Coach</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="data.js" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="data.js"></script>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans">
 
-  <div class="dashboard-container">
+  <div class="flex h-screen overflow-hidden">
     
-    <aside class="sidebar">
-      <div class="brand">
-        <span class="material-icons-outlined brand-icon">forum</span>
-        <div>
-          <h2>EchoHire</h2>
-          <p>AI Interview Coach</p>
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between p-4 flex-shrink-0">
+      <div>
+        <div class="flex items-center gap-3 px-2 py-3 mb-6">
+          <div class="bg-indigo-600 text-white p-2 rounded-xl flex items-center justify-center">
+            <span class="material-icons-outlined text-xl">forum</span>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900 tracking-tight">EchoHire</h2>
+            <p class="text-xs text-slate-400 font-medium">AI Interview Coach</p>
+          </div>
         </div>
+
+        <nav class="space-y-1">
+          <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold bg-indigo-50 text-indigo-600 transition-colors">
+            <span class="material-icons-outlined text-lg">chat_bubble_outline</span> Interview
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+            <span class="material-icons-outlined text-lg">leaderboard</span> Analysis
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+            <span class="material-icons-outlined text-lg">history</span> History
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+            <span class="material-icons-outlined text-lg">tips_and_updates</span> Tips
+          </a>
+        </nav>
       </div>
 
-      <nav class="nav-menu">
-        <a href="#" class="nav-item active"><span class="material-icons-outlined">chat_bubble_outline</span> Interview</a>
-        <a href="#" class="nav-item"><span class="material-icons-outlined">leaderboard</span> Analysis</a>
-        <a href="#" class="nav-item"><span class="material-icons-outlined">history</span> History</a>
-        <a href="#" class="nav-item"><span class="material-icons-outlined">tips_and_updates</span> Tips</a>
-      </nav>
-
-      <div class="user-profile login-trigger" style="cursor: pointer;">
-        <div class="avatar" style="background-color: #16161a; border-color: #27272a;">
-          <span class="material-icons-outlined" style="font-size: 16px; color: var(--text-muted);">login</span>
+      <div class="border-t border-slate-100 pt-4 flex items-center justify-between px-2">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-600 font-bold text-sm">
+            A
+          </div>
+          <div>
+            <div id="candidate-display-name" class="text-sm font-bold text-slate-900 truncate max-w-[120px]">Aarav Kumar</div>
+            <p class="text-xs text-slate-400 font-medium truncate max-w-[120px]">Candidate</p>
+          </div>
         </div>
-        <div class="user-info">
-          <span id="candidate-name" class="user-name" style="color: var(--text-muted);">Guest Account</span>
-          <span id="candidate-role" class="user-role">Click to Sign In</span>
-        </div>
-        <span class="material-icons-outlined toggle-icon">chevron_right</span>
+        <span class="material-icons-outlined text-slate-400 text-sm">expand_more</span>
       </div>
     </aside>
 
-    <main class="main-content">
-      <header class="main-header">
-        <div class="header-title">
-          <h1>Mock Interview <span class="badge-live" style="color: var(--text-muted); background: transparent; border-color: var(--border-color);">&mdash;</span></h1>
-          <p>Role: <span class="text-highlight">Not Selected</span></p>
+    <main class="flex-1 bg-slate-50 flex flex-col justify-between overflow-hidden">
+      <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-slate-900">Mock Interview</h1>
+            <span id="live-status-indicator" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 transition-all hover:bg-emerald-100">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 font-medium mt-0.5">Role: <span class="text-indigo-600 font-semibold">Software Engineer</span></p>
         </div>
-        <button class="btn-end" style="color: var(--text-muted); border-color: var(--border-color); cursor: not-allowed;" disabled>
-          <span class="material-icons-outlined">lock</span> Secure Session
+        <button class="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 rounded-xl text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 transition-colors">
+          <span class="material-icons-outlined text-sm">motion_photos_paused</span> End Interview
         </button>
       </header>
 
-      <div class="chat-area" style="justify-content: center; align-items: center;">
-        <div class="empty-state-wrapper" style="text-align: center; max-width: 320px;">
-          <span class="material-icons-outlined" style="font-size: 40px; color: var(--border-color); margin-bottom: 16px; display: block;">fingerprint</span>
-          <h3 style="font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 6px;">Initialize Session Architecture</h3>
-          <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">Type your targeted role below or connect your profile to begin the diagnostic evaluation lifecycle.</p>
+      <div id="chat-bubble-container" class="flex-1 overflow-y-auto px-8 py-6 scroll-smooth">
+        <div class="flex gap-3 mb-4 items-start">
+          <div class="bg-indigo-100 p-2 rounded-full text-indigo-600 font-bold text-sm">🤖</div>
+          <div>
+            <div class="text-xs text-slate-400 font-medium mb-1">AI Interviewer • 10:30 AM</div>
+            <div class="bg-indigo-50 text-slate-800 p-4 rounded-2xl rounded-tl-none max-w-xl text-sm border border-indigo-100 leading-relaxed">
+              Hi Aarav! Thanks for joining today. Let's start. <strong>Can you tell me about a project you're most proud of and your role in it?</strong>
+            </div>
+          </div>
         </div>
       </div>
 
-      <footer class="input-footer">
-        <div class="progress-container">
-          <span class="progress-text">Question 1 of 5</span>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: 20%;"></div>
+      <footer class="bg-white border-t border-slate-200 px-8 py-4 flex-shrink-0">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Question 2 of 5</span>
+          <div class="w-48 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width: 40%;"></div>
           </div>
         </div>
 
-        <div class="input-box-wrapper">
-          <input type="text" placeholder="Specify role or paste job description to begin..." class="reply-input">
-          <div class="input-actions">
-            <button class="btn-mic"><span class="material-icons-outlined">mic_none</span> System Calibrated</button>
-            <button class="btn-send"><span class="material-icons-outlined">play_arrow</span> Start</button>
+        <div class="relative bg-slate-50 border border-slate-200 rounded-2xl p-2 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+          <textarea id="chat-input-field" rows="2" placeholder="Type your answer here..." class="w-full bg-transparent resize-none border-0 focus:ring-0 text-sm text-slate-800 placeholder-slate-400 px-2 py-1 outline-none"></textarea>
+          <div class="flex items-center justify-between border-t border-slate-100 pt-2 px-1">
+            <button class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-600 transition-colors">
+              <span class="material-icons-outlined text-sm text-indigo-600">mic</span> Tap to speak
+            </button>
+            <button id="send-message-btn" class="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm shadow-indigo-200 transition-all active:scale-95">
+              <span class="material-icons-outlined text-xs">send</span> Send
+            </button>
           </div>
         </div>
 
-        <div class="pro-tip">
-          <span class="material-icons-outlined tip-icon">tips_and_updates</span>
-          <p><strong>Pro Tip:</strong> Sign in using the panel link on the left to sync past technical evaluation metrics.</p>
+        <div class="flex items-start gap-2 mt-3 text-xs text-slate-400 leading-normal">
+          <span class="material-icons-outlined text-sm text-indigo-500 flex-shrink-0 mt-0.5">lightbulb</span>
+          <p id="pro-tip-text" class="font-medium">Take a moment, think, and answer with structure. You've got this!</p>
         </div>
       </footer>
     </main>
 
-    <aside class="analytics-sidebar">
-      <h3>Live Analysis</h3>
+    <aside class="w-80 bg-white border-l border-slate-200 flex flex-col p-5 space-y-5 overflow-y-auto flex-shrink-0">
+      <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Live Analysis</h3>
 
-      <div class="card gauge-card">
-        <h4>Overall Confidence</h4>
-        <div class="gauge-wrapper">
-          <div class="semi-circle-gauge" style="background: var(--border-color);">
-            <div class="gauge-center">
-              <span class="score" style="color: var(--text-muted);">&mdash;</span>
-              <span class="total">/100</span>
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 w-full text-left">Overall Confidence</h4>
+        <div class="relative w-full h-28 flex items-center justify-center overflow-hidden">
+          <canvas id="confidenceGauge" class="w-full h-full"></canvas>
+          <div class="absolute bottom-1 text-center flex flex-col items-center">
+            <div class="flex items-baseline justify-center">
+              <span id="score-number" class="text-3xl font-black text-slate-900 tracking-tight">-</span>
+              <span class="text-xs font-bold text-slate-400 ml-0.5">/100</span>
             </div>
-          </div>
-        </div>
-        <span class="gauge-status" style="color: var(--text-muted);">Idle</span>
-      </div>
-
-      <div class="card perception-card">
-        <h4>Interviewer Perception</h4>
-        <div class="perception-content">
-          <span class="material-icons-outlined perception-icon" style="color: var(--text-muted);">sensors_off</span>
-          <p id="perception-text" class="text-slate-300" style="color: var(--text-muted);">Awaiting audio/text streaming input fields...</p>
-        </div>
-      </div>
-
-      <div class="card insights-card">
-        <div class="tabs-nav">
-          <button class="tab-btn border-indigo-500 text-indigo-400" data-target="panel-weaknesses">Key Insights</button>
-          <button class="tab-btn" data-target="panel-tips">Tips</button>
-          <button class="tab-btn" data-target="panel-suggestions">Suggestions</button>
-        </div>
-
-        <div class="tabs-content">
-          <div id="panel-weaknesses" class="tab-panel">
-            <ul id="weaknesses-list" class="insight-list">
-              <li>
-                <div class="insight-label"><span class="material-icons-outlined" style="color: var(--text-muted);">stars</span> Confidence</div>
-                <div class="insight-status" style="color: var(--text-muted); font-weight: 500;">&mdash;</div>
-              </li>
-              <li>
-                <div class="insight-label"><span class="material-icons-outlined" style="color: var(--text-muted);">chat</span> Clarity</div>
-                <div class="insight-status" style="color: var(--text-muted); font-weight: 500;">&mdash;</div>
-              </li>
-              <li>
-                <div class="insight-label"><span class="material-icons-outlined" style="color: var(--text-muted);">segment</span> Structure</div>
-                <div class="insight-status" style="color: var(--text-muted); font-weight: 500;">&mdash;</div>
-              </li>
-              <li>
-                <div class="insight-label"><span class="material-icons-outlined" style="color: var(--text-muted);">local_fire_department</span> Enthusiasm</div>
-                <div class="insight-status" style="color: var(--text-muted); font-weight: 500;">&mdash;</div>
-              </li>
-            </ul>
-          </div>
-
-          <div id="panel-tips" class="tab-panel hidden">
-            <ul id="tips-list" class="list-container"></ul>
-          </div>
-
-          <div id="panel-suggestions" class="tab-panel hidden">
-            <ul id="suggestions-list" class="list-container"></ul>
+            <span id="score-status" class="text-xs font-bold text-indigo-600 uppercase tracking-wider mt-0.5">Good</span>
           </div>
         </div>
       </div>
 
-      <div class="h-64 w-full" style="display: none !important;">
-        <canvas id="metricsChart"></canvas>
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-2">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Interviewer Perception</h4>
+        <div class="flex gap-3 items-start bg-slate-50 border border-slate-100 rounded-xl p-3">
+          <div class="bg-indigo-50 text-indigo-600 p-1.5 rounded-lg flex items-center justify-center">
+            <span class="material-icons-outlined text-base">psychology</span>
+          </div>
+          <p id="perception-box-text" class="text-xs text-slate-500 font-medium leading-relaxed">
+            You sound technically strong and enthusiastic. Keep structuring your answers a bit more for clarity.
+          </p>
+        </div>
       </div>
 
-      <div class="card progress-steps-card">
-        <h4>Question Progress</h4>
-        <div class="steps-wrapper">
-          <div class="step active">1</div>
-          <div class="step">2</div>
-          <div class="step">3</div>
-          <div class="step">4</div>
-          <div class="step">5</div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Key Insights</h4>
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between text-xs border-b border-slate-50 pb-2">
+            <span class="flex items-center gap-2 text-slate-500 font-medium"><span class="material-icons-outlined text-sm text-indigo-500">star_outline</span> Confidence</span>
+            <div id="insight-confidence"><span class="text-emerald-600 font-semibold flex items-center gap-1">↑ Good</span></div>
+          </div>
+          <div class="flex items-center justify-between text-xs border-b border-slate-50 pb-2">
+            <span class="flex items-center gap-2 text-slate-500 font-medium"><span class="material-icons-outlined text-sm text-indigo-500">chat_bubble_outline</span> Clarity</span>
+            <div id="insight-clarity"><span class="text-amber-500 font-semibold flex items-center gap-1">→ Average</span></div>
+          </div>
+          <div class="flex items-center justify-between text-xs border-b border-slate-50 pb-2">
+            <span class="flex items-center gap-2 text-slate-500 font-medium"><span class="material-icons-outlined text-sm text-indigo-500">format_list_numbered</span> Structure</span>
+            <div id="insight-structure"><span class="text-amber-500 font-semibold flex items-center gap-1">→ Average</span></div>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="flex items-center gap-2 text-slate-500 font-medium"><span class="material-icons-outlined text-sm text-indigo-500">local_fire_department</span> Enthusiasm</span>
+            <div id="insight-enthusiasm"><span class="text-emerald-600 font-semibold flex items-center gap-1">↑ Good</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Question Progress</h4>
+        <div class="flex justify-between items-center px-1">
+          <div id="step-dot-1" class="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-bold text-xs transition-all duration-300">1</div>
+          <div id="step-dot-2" class="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-xs transition-all duration-300">2</div>
+          <div id="step-dot-3" class="w-8 h-8 flex items-center justify-center rounded-full border border-slate-200 text-slate-400 font-bold text-xs transition-all duration-300">3</div>
+          <div id="step-dot-4" class="w-8 h-8 flex items-center justify-center rounded-full border border-slate-200 text-slate-400 font-bold text-xs transition-all duration-300">4</div>
+          <div id="step-dot-5" class="w-8 h-8 flex items-center justify-center rounded-full border border-slate-200 text-slate-400 font-bold text-xs transition-all duration-300">5</div>
         </div>
       </div>
     </aside>
 
   </div>
 
+  <script src="data.js"></script>
 </body>
 </html>

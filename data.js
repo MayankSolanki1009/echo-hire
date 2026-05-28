@@ -1,6 +1,6 @@
 /**
  * EchoHire - Native Fetch REST Integration Engine
- * No SDK dependencies required. Bypasses CDN library loading issues.
+ * Configured for realistic, conversational mock interviewer persona.
  */
 
 const GEMINI_API_KEY = "AIzaSyBt91jEBqEjbB2H6qITY0L44uN6PTDssRI";
@@ -17,14 +17,14 @@ const appState = {
     overallConfidence: 0,
     statusText: "Idle",
     perceptionText: "Awaiting your target role submission to initialize telemetry systems...",
-    proTip: "Type any career track below (e.g., Frontend Developer, Data Scientist) to unlock the live workspace panel.",
+    proTip: "Type your desired interview track below (e.g., Software Engineer, Product Manager) to begin.",
     insights: {
         confidence: { score: "—" },
         clarity: { score: "—" },
         structure: { score: "—" },
         enthusiasm: { score: "—" }
     },
-    chatHistory: [] // Stores conversation history for ongoing context
+    chatHistory: [] 
 };
 
 // 3. APPLICATION RUNTIME CONTAINER LIFECYCLE
@@ -73,7 +73,7 @@ async function handleActionCycle() {
 
     inputField.value = '';
 
-    // PHASE ONE: Setup track and call initial system welcome parameters
+    // PHASE ONE: System checks what track the user typed, updates headers, and lets Gemini introduce the session
     if (!interviewActive) {
         appState.targetedRole = rawInput;
         interviewActive = true;
@@ -84,7 +84,10 @@ async function handleActionCycle() {
         clearMainWorkspaceForChat();
         showTypingIndicator(true);
         
-        const systemPrompt = `You are a strict, highly encouraging executive AI Mock Interviewer. The candidate is targeting a '${appState.targetedRole}' position. Greet them by name (${appState.candidateName}) and ask Question 1: An engaging, open-ended introductory technical concept question designed for this exact specialty. Return raw plain text lines only, do not wrap your output message inside markdown blocks.`;
+        // This system prompt explicitly instructs Gemini to act like an interviewer welcoming them to their chosen track
+        const systemPrompt = `You are a professional, conversational corporate recruiter/technical interviewer. The candidate, ${appState.candidateName}, has selected the interview track: "${appState.targetedRole}". 
+        Acknowledge their selection warmly, officially welcome them to the interview, and ask your very first introductory question relevant to a ${appState.targetedRole} position. 
+        Talk naturally like a human interviewer. Do not wrap your response in markdown code blocks, output clean plain text lines only.`;
         
         const initialAIQuestion = await fetchGeminiNative(systemPrompt);
         showTypingIndicator(false);
@@ -93,24 +96,26 @@ async function handleActionCycle() {
         
         appState.overallConfidence = 65;
         appState.statusText = "GOOD";
-        appState.perceptionText = `Track initialized for ${appState.targetedRole.toUpperCase()}. Workspace mapping operational arrays.`;
-        appState.proTip = "Structure your answer by explaining your choices and detailing structural project trade-offs.";
+        appState.perceptionText = `Track initialized for ${appState.targetedRole.toUpperCase()}. Interviewer is assessing baseline communication.`;
+        appState.proTip = "Take a breath and structure your answer logically. Use real examples from past projects.";
         
         syncDashboardUI();
         return;
     }
 
-    // PHASE TWO: Process dynamic answer tracking loops
+    // PHASE TWO: Continuous Interview Dialogue Loop
     appendChatBubble("user", rawInput);
     showTypingIndicator(true);
 
-    const evaluationContextPrompt = `The candidate is responding to your last interview question for the role of ${appState.targetedRole}. 
-    Candidate response string data: "${rawInput}"
+    // This prompt forces Gemini to stay in character, evaluate the answer naturally, and transition into the next question
+    const evaluationContextPrompt = `You are the interviewer conducting a live interview for a ${appState.targetedRole} position with candidate ${appState.candidateName}.
+    The candidate just answered your previous question with: "${rawInput}"
     
-    Execute exactly these two structural requirements in your output payload:
-    1. Reply with a highly professional feedback paragraph grading their answer content, then immediately frame your NEXT technical follow-up interview question. Keep it brief.
-    2. At the absolute end of your response text, attach this exact JSON block token mapping structure wrapped inside <metrics></metrics> tags containing scoring metrics ranging from 40 to 100 based on their answer quality parameters:
-    <metrics>{"confidence": 80, "clarity": 75, "structure": 85, "enthusiasm": 90, "overall": 82, "status": "GOOD", "perception": "Maintained strong clarity values in technical reasoning pathways."}</metrics>`;
+    Respond exactly like a real human interviewer would:
+    1. Briefly acknowledge or validate their answer naturally in a sentence or two (e.g., "Great points on resource optimization," or "That is a solid approach to team management.").
+    2. Transition smoothly into asking your NEXT interview question. Keep the entire response conversational and under three paragraphs.
+    3. At the absolute end of your response text, attach this exact JSON block token mapping structure wrapped inside <metrics></metrics> tags to update the dashboard values dynamically (scores 40-100):
+    <metrics>{"confidence": 82, "clarity": 78, "structure": 80, "enthusiasm": 85, "overall": 81, "status": "GOOD", "perception": "Candidate responded naturally and stayed on track with technical examples."}</metrics>`;
 
     const rawAIResult = await fetchGeminiNative(evaluationContextPrompt);
     showTypingIndicator(false);
@@ -125,7 +130,7 @@ async function handleActionCycle() {
             
             appState.overallConfidence = metricsData.overall || 75;
             appState.statusText = (metricsData.status || "GOOD").toUpperCase();
-            appState.perceptionText = metricsData.perception || "Maintained stable domain authority parameters.";
+            appState.perceptionText = metricsData.perception || "Interviewer is tracking domain knowledge confidence markers.";
             
             appState.insights.confidence.score = `${metricsData.confidence}%`;
             appState.insights.clarity.score = `${metricsData.clarity}%`;
@@ -150,9 +155,8 @@ async function handleActionCycle() {
     syncDashboardUI();
 }
 
-// 6. NATIVE HTTP FETCH REQUEST PIPELINE (No SDK needed)
+// 6. NATIVE HTTP FETCH REQUEST PIPELINE
 async function fetchGeminiNative(promptText) {
-    // Add raw prompt into chat state history mapping logs
     appState.chatHistory.push({
         role: "user",
         parts: [{ text: promptText }]
@@ -179,7 +183,6 @@ async function fetchGeminiNative(promptText) {
         const data = await response.json();
         const outputText = data.candidates[0].content.parts[0].text;
 
-        // Keep system tracking logs synchronized
         appState.chatHistory.push({
             role: "model",
             parts: [{ text: outputText }]
@@ -205,7 +208,7 @@ function clearMainWorkspaceForChat() {
 function initUIElements() {
     const inputField = document.getElementById('chat-input-field') || document.querySelector('input');
     if (inputField) {
-        inputField.placeholder = "Specify target role or paste job description to begin...";
+        inputField.placeholder = "Enter interview track (e.g., Software Engineer, Product Manager)...";
     }
     syncDashboardUI();
 }
@@ -223,7 +226,7 @@ function syncDashboardUI() {
     if (tipText) tipText.textContent = appState.proTip;
 
     if (inputField && interviewActive) {
-        inputField.placeholder = "Type your contextual answer here...";
+        inputField.placeholder = "Type your answer here...";
     }
 
     updateInsightRow('Confidence', appState.insights.confidence.score);
